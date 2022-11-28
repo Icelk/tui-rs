@@ -6,6 +6,10 @@
 
 <img src="./assets/demo.gif" alt="Demo cast under Linux Termite with Inconsolata font 12pt">
 
+> This is a fork which adds proper support for inline terminal escape codes.
+> Used in [my for of `spotify-tui`](https://github.com/Icelk/spotify-tui).
+> For now, the patches are only applied to [`0.16.0`](https://github.com/Icelk/tui-rs/tree/0.16.0).
+
 `tui-rs` is a [Rust](https://www.rust-lang.org) library to build rich terminal
 user interfaces and dashboards. It is heavily inspired by the `Javascript`
 library [blessed-contrib](https://github.com/yaronn/blessed-contrib) and the
