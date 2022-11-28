@@ -18,7 +18,12 @@ pub struct Cell {
 
 impl Cell {
     pub fn set_symbol(&mut self, symbol: &str) -> &mut Cell {
-        self.symbol.clear();
+        if UnicodeSegmentation::graphemes(self.symbol.as_str(), true)
+            .next()
+            .map_or(true, |g| g.width() != 0)
+        {
+            self.symbol.clear();
+        }
         self.symbol.push_str(symbol);
         self
     }
@@ -292,10 +297,25 @@ impl Buffer {
         let mut x_offset = x as usize;
         let graphemes = UnicodeSegmentation::graphemes(string.as_ref(), true);
         let max_offset = min(self.area.right() as usize, width.saturating_add(x as usize));
+        let mut in_escape_code = false;
+        let mut last_in_escape_code = false;
         for s in graphemes {
+            let was_in_escape_code = in_escape_code;
             let width = s.width();
-            if width == 0 {
+            if in_escape_code && (s.contains(';') || s.contains('\\')) {
+                in_escape_code = false;
+            }
+            if width == 0 && s == "\x1b" {
+                in_escape_code = true;
+            }
+            if was_in_escape_code {
+                self.content[index].symbol += s;
                 continue;
+            }
+            if last_in_escape_code && !in_escape_code {
+                self.content[index].symbol += " ";
+                index += 1;
+                x_offset += 1;
             }
             // `x_offset + width > max_offset` could be integer overflow on 32-bit machines if we
             // change dimenstions to usize or u32 and someone resizes the terminal to 1x2^32.
@@ -311,6 +331,7 @@ impl Buffer {
             }
             index += width;
             x_offset += width;
+            last_in_escape_code = in_escape_code;
         }
         (x_offset as u16, y)
     }
